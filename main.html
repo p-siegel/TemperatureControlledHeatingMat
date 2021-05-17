@@ -1,0 +1,222 @@
+<!DOCTYPE HTML><html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    html {
+     font-family: Arial;
+     display: inline-block;
+     margin: 0px auto;
+     text-align: center;
+    }
+    h2 { font-size: 3.0rem; }
+    p { font-size: 3.0rem; }
+    .units { font-size: 1.2rem; }
+    .ds-labels{
+      font-size: 1.5rem;
+      vertical-align:middle;
+      padding-bottom: 15px;
+    }
+    form {
+    overflow: hidden;
+    } 
+    .btn-settings {
+      border: none;
+      color: white;
+      float: right;
+      padding: 15px 32px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      background-color: #03A1FC;
+    }
+    .btn-on{
+      border: none;
+      color: white;
+      padding: 15px 32px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      background-color: #4CAF50;
+    }
+    .grid-container {
+      display: grid;
+      justify-content: center;
+      text-align: center;
+      grid-template-columns: auto auto;
+    }
+    .submit-btn{
+      border: none;
+      color: white;
+      padding: 15px 32px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      background-color: #3281A8;
+    }
+    .switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+input:checked + .slider {
+  background-color: #2196F3;
+}
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+.slider.round:before {
+  border-radius: 50%;
+}
+  </style>
+ <script>
+const Regulator = {
+  reg_on: 0,
+  reg_off: 1
+};
+const Socket = {
+  socket_unknown: 0,
+  socket_on: 1,
+  socket_off: 2
+};
+function getTemperature(){
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      var response = JSON.parse(this.responseText);
+      document.getElementById("temperaturec").innerHTML = response.currentTemp;
+      document.getElementById("temperatureTarget").innerHTML = response.targetTemp;
+      /*document.getElementById("input_temp").value = response.targetTemp;*/
+      document.getElementById("temperatureDelta").innerHTML = response.delta;
+      /*document.getElementById("input_delta").value = response.delta;*/
+      if( response.regulator == Regulator.reg_on ){
+        document.getElementById("regulator-switch").checked = true;
+      }else{
+        document.getElementById("regulator-switch").checked = false;
+      }
+      if( response.socket == Socket.socket_on ){
+        document.getElementById("socket-switch").checked = true;
+      }else{
+        document.getElementById("socket-switch").checked = false;
+      }
+    }
+  };
+  xhttp.open("GET", "/temperaturec", true);
+  xhttp.send();
+};
+setInterval(getTemperature, 5000);
+function turnOn(){
+  var xhttp = new XMLHttpRequest();
+  xhttp.open("GET", "/turnOn", true);
+  xhttp.send();
+};
+function turnOff(){
+  var xhttp = new XMLHttpRequest();
+  xhttp.open("GET", "/turnOff", true);
+  xhttp.send();
+};
+function handleClick(cb) {
+  if(cb.checked){
+    var xhttp = new XMLHttpRequest();
+    xhttp.open("GET", "/activateRegulation", true);
+    xhttp.send();
+  }else{
+    var xhttp = new XMLHttpRequest();
+    xhttp.open("GET", "/deactivateRegulation", true);
+    xhttp.send();
+  }
+};
+function handleMatteClick(cb) {
+  if(cb.checked){
+    var xhttp = new XMLHttpRequest();
+    xhttp.open("GET", "/turnOn", true);
+    xhttp.send();
+  }else{
+    var xhttp = new XMLHttpRequest();
+    xhttp.open("GET", "/turnOff", true);
+    xhttp.send();
+  }
+};
+function getSettings(){
+    location.href = "/settings";
+};
+</script>
+</head>
+<body onload="getTemperature()">
+  <h2>Heizmatten Server</h2>
+  <button  class="btn-settings" id="settings_btn" onclick="getSettings()">Einstellungen</button>
+  <p>
+    <i class="fas fa-thermometer-half" style="color:#059e8a;"></i> 
+    <span class="ds-labels">Aktuelle Temperatur</span> 
+    <span id="temperaturec">%TEMPERATUREC%</span>
+    <sup class="units">&deg;C</sup>
+  </p>
+  <p>
+    <span class="ds-labels">Temperaturziel</span> 
+    <span id="temperatureTarget">%TEMPERATURETARGET%</span>
+    <sup class="units">&deg;C</sup>
+  </p>
+  <p>
+    <span class="ds-labels">Temperatur Delta</span> 
+    <span id="temperatureDelta">%TEMPERATUREDELTA%</span>
+    <sup class="units">&deg;C</sup>
+  </p>
+  <p>
+  </p>
+  <p>
+    <span class="ds-labels">Regelung an/aus:</span>
+    <label class="switch">
+    <input id="regulator-switch" type="checkbox" onclick="handleClick(this);">
+    <span class="slider round"></span>
+    </label>
+  </p>
+  <p>
+    <span class="ds-labels">Matte an/aus:</span>
+    <label class="switch">
+    <input id="socket-switch" type="checkbox" onclick="handleMatteClick(this);">
+    <span class="slider round"></span>
+    </label>
+  </p>
+</body>
+</html>
